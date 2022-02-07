@@ -1,0 +1,122 @@
+﻿@page "/"
+@using MiniProjeto_PesquisaComLINQ.Models
+@inject IImovel_Repository Imoveis;
+
+
+<PageTitle>Index</PageTitle>
+
+<div class="col-12">
+    <h1 class="text-center">Pesquisa com LINQ</h1>
+</div>
+<hr />
+<div class="container">
+    <div class="d-flex justify-content-center">
+        <p class="text-danger fw-bold" style="font-size:20px;">@Mensagem_erro</p>
+    </div>
+    <div class="row col-12 my-2">
+        <div class="form-control-lg d-flex justify-content-end">                        
+            <input class="form-control w-25" @bind-value="Texto" @onmouseover="()=>Mensagem_erro=string.Empty"  placeholder="Pesquisar"></input>            
+            <select @bind="Categoria" class="form-select w-auto mx-1">
+                <option value=0>Selecione</option>
+                <option value=1 >Nome</option>
+                <option value=2>Cidade</option>
+                <option value=3>Menor que</option>
+                <option value=4>Maior que</option>
+            </select>
+            <button class="btn btn-primary" @onclick="()=>Procurar(Texto)">Procurar</button>
+        </div>
+    </div>
+
+    <table class="table col-12">
+      <thead>
+        <tr>
+          <th scope="col">Id</th>
+          <th scope="col">Título</th>
+          <th scope="col">Cidade</th>
+          <th scope="col">Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+            @foreach(var imovel in lista_imoveis)
+            {
+                <tr>
+                  <th>@imovel.Id</th>
+                  <td>@imovel.Titulo</td>
+                  <td>@imovel.Cidade.GetEnumDescription()</td>
+                  <td class="justify-content-end">@imovel.Valor.ToString("C")</td>
+                </tr>    
+            }            
+      </tbody>
+    </table>
+</div>
+<div class="container">
+    <div class="d-flex justify-content-end">
+        <p>@lista_imoveis.Count itens encontrados</p>
+    </div>    
+</div>
+
+@code{
+    public string Texto { get; set; } = string.Empty;    
+    public int Categoria { get; set; }
+    public string Mensagem_erro { get; set; } = string.Empty;
+    public List<Imovel> lista_imoveis { get; set; }
+
+    protected override void OnInitialized()
+    {
+        lista_imoveis = Imoveis.Get_Imovel();
+    }
+
+    public void Procurar (string dado)
+    {
+        switch (Categoria)
+        {
+            case 1:
+                lista_imoveis = Imoveis.Get_Imovel_By_Name(dado);
+                break;
+            case 2:
+                lista_imoveis = Imoveis.Get_Imovel_by_Cidade(dado);
+                break;
+            case 3:
+                if (dado == string.Empty)
+                {
+                    dado = "0";
+                }
+                else
+                {
+                    try
+                    {
+                        lista_imoveis = Imoveis.Get_Imovel_by_Value(double.Parse(dado), true);
+                    }
+                    catch
+                    {
+                        Mensagem_erro = "Maior e Menor que devem ser apenas números";
+                    }
+                }                
+                break;
+            case 4:
+                if (dado == string.Empty)
+                {
+                    dado = "0";
+                }
+                else
+                {
+                    try
+                    {
+                        lista_imoveis = Imoveis.Get_Imovel_by_Value(double.Parse(dado), false);
+                    }
+                    catch
+                    {
+                        Mensagem_erro = "Maior e Menor que devem ser apenas números";
+                    }
+                }
+                break;
+            default:
+                lista_imoveis = Imoveis.Get_Imovel();
+                break;
+            StateHasChanged();
+        }
+        
+
+    }
+
+}
